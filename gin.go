@@ -648,14 +648,21 @@ func (engine *Engine) RunListener(listener net.Listener) (err error) {
 }
 
 // ServeHTTP conforms to the http.Handler interface.
+// 实现 http.Handler 接口，用于处理 HTTP 请求。
 func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	// 从 sync.pool 中获取一个 Context 对象，高性能复用，减少 GC 压力
 	c := engine.pool.Get().(*Context)
+	// 重置 Context 对象
 	c.writermem.reset(w)
+	// 设置请求对象
 	c.Request = req
+	// 重置 Context 对象
 	c.reset()
 
+	// 处理 HTTP 请求
 	engine.handleHTTPRequest(c)
 
+	// 将 Context 对象放回 sync.pool 中，减少 GC 压力
 	engine.pool.Put(c)
 }
 
@@ -672,20 +679,27 @@ func (engine *Engine) HandleContext(c *Context) {
 	c.handlers = oldHandlers
 }
 
+// 处理 HTTP 请求
 func (engine *Engine) handleHTTPRequest(c *Context) {
+	// 获取 HTTP 方法
 	httpMethod := c.Request.Method
+	// 获取请求路径
 	rPath := c.Request.URL.Path
+	// 是否解码路径
 	unescape := false
+	// 如果使用原始路径，并且原始路径长度大于 0，则使用原始路径
 	if engine.UseRawPath && len(c.Request.URL.RawPath) > 0 {
 		rPath = c.Request.URL.RawPath
 		unescape = engine.UnescapePathValues
 	}
 
+	// 如果移除额外斜杠，则清理路径
 	if engine.RemoveExtraSlash {
 		rPath = cleanPath(rPath)
 	}
 
 	// Find root of the tree for the given HTTP method
+	// 获取 HTTP 方法的路由器跟节点 node
 	t := engine.trees
 	for i, tl := 0, len(t); i < tl; i++ {
 		if t[i].method != httpMethod {
