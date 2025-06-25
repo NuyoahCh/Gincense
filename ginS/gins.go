@@ -56,6 +56,7 @@ func NoMethod(handlers ...gin.HandlerFunc) {
 
 // Group creates a new router group. You should add all the routes that have common middlewares or the same path prefix.
 // For example, all the routes that use a common middleware for authorization could be grouped.
+// 创建子分组，子分组会继承父分组的中间件和路径前缀。
 func Group(relativePath string, handlers ...gin.HandlerFunc) *gin.RouterGroup {
 	return engine().Group(relativePath, handlers...)
 }
@@ -129,6 +130,7 @@ func StaticFS(relativePath string, fs http.FileSystem) gin.IRoutes {
 // Use attaches a global middleware to the router. i.e. the middlewares attached through Use() will be
 // included in the handlers chain for every single request. Even 404, 405, static files...
 // For example, this is the right place for a logger or error management middleware.
+// 分组添加中间件，会应用到所有路由上。
 func Use(middlewares ...gin.HandlerFunc) gin.IRoutes {
 	return engine().Use(middlewares...)
 }

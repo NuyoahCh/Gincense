@@ -24,12 +24,14 @@ var (
 )
 
 // IRouter defines all router handle interface includes single and group router.
+// 链式路由器接口，包含单路由器和分组路由器。
 type IRouter interface {
 	IRoutes
 	Group(string, ...HandlerFunc) *RouterGroup
 }
 
 // IRoutes defines all router handle interface.
+// 分组嵌套路由器接口，包含单路由器和分组路由器。
 type IRoutes interface {
 	Use(...HandlerFunc) IRoutes
 
@@ -52,11 +54,12 @@ type IRoutes interface {
 
 // RouterGroup is used internally to configure router, a RouterGroup is associated with
 // a prefix and an array of handlers (middleware).
+// RouterGroup 是路由组，包含路由器、中间件和配置设置，（非常基础、重要、核心的配置）
 type RouterGroup struct {
-	Handlers HandlersChain
-	basePath string
-	engine   *Engine
-	root     bool
+	Handlers HandlersChain // 处理函数链，用于存储中间件和处理函数
+	basePath string        // 基础路径，用于存储路由组的路径
+	engine   *Engine       // 引擎，用于存储引擎实例
+	root     bool          // 是否是根路由组
 }
 
 var _ IRouter = (*RouterGroup)(nil)
@@ -83,10 +86,15 @@ func (group *RouterGroup) BasePath() string {
 	return group.basePath
 }
 
+// 处理路由注册
 func (group *RouterGroup) handle(httpMethod, relativePath string, handlers HandlersChain) IRoutes {
+	// 将分组的 basePath 和当前路由的 relativePath 拼接成完整路径。
 	absolutePath := group.calculateAbsolutePath(relativePath)
+	// 将分组的 handlers 和当前路由的 handlers 合并
 	handlers = group.combineHandlers(handlers)
+	// 把路由注册到路由树中
 	group.engine.addRoute(httpMethod, absolutePath, handlers)
+	// 返回路由组对象
 	return group.returnObj()
 }
 
@@ -113,6 +121,7 @@ func (group *RouterGroup) POST(relativePath string, handlers ...HandlerFunc) IRo
 }
 
 // GET is a shortcut for router.Handle("GET", path, handlers).
+// 本质上是 router.Handle("GET", path, handlers) 的封装
 func (group *RouterGroup) GET(relativePath string, handlers ...HandlerFunc) IRoutes {
 	return group.handle(http.MethodGet, relativePath, handlers)
 }
@@ -247,6 +256,7 @@ func (group *RouterGroup) combineHandlers(handlers HandlersChain) HandlersChain 
 	return mergedHandlers
 }
 
+// 将分组的 basePath 和当前路由的 relativePath 拼接成完整路径。
 func (group *RouterGroup) calculateAbsolutePath(relativePath string) string {
 	return joinPaths(group.basePath, relativePath)
 }
