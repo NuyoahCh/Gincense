@@ -91,7 +91,9 @@ const (
 
 // Engine is the framework's instance, it contains the muxer, middleware and configuration settings.
 // Create an instance of Engine, by using New() or Default()
+// Engine 是框架的实例，包含路由器、中间件和配置设置
 type Engine struct {
+	// RouterGroup 是路由组，包含路由器、中间件和配置设置，（非常基础、重要、核心的配置）
 	RouterGroup
 
 	// RedirectTrailingSlash enables automatic redirection if the current route can't be matched but a
@@ -223,10 +225,14 @@ func New(opts ...OptionFunc) *Engine {
 }
 
 // Default returns an Engine instance with the Logger and Recovery middleware already attached.
+// 本质上是 gin.New() 的封装，并添加了 Logger 和 Recovery 中间件
 func Default(opts ...OptionFunc) *Engine {
 	debugPrintWARNINGDefault()
+	// 创建一个默认的路由引擎
 	engine := New()
+	// 使用 Logger(用于记录 HTTP 请求日志) 和 Recovery(用于恢复 panic 并返回 500 状态码) 中间件
 	engine.Use(Logger(), Recovery())
+	// 返回配置好的引擎实例
 	return engine.With(opts...)
 }
 
