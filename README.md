@@ -1,3 +1,7 @@
+# Gincense
+A curated journey to deeply learn the Gin web framework through hands-on demos and source code exploration. 
+（通过动手实践和源码探索深入学习 Gin 框架的旅程）
+
 # Gin Web Framework
 
 <img align="right" width="159px" src="https://raw.githubusercontent.com/gin-gonic/logo/master/color.png">
@@ -171,4 +175,3 @@ Here are some awesome projects that are using the [Gin](https://github.com/gin-g
 Gin is the work of hundreds of contributors. We appreciate your help!
 
 Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on submitting patches and the contribution workflow.
-# Gincense
