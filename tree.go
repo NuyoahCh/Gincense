@@ -142,28 +142,36 @@ func (n *node) incrementChildPrio(pos int) int {
 
 // addRoute adds a node with the given handle to the path.
 // Not concurrency-safe!
+// Gin 的路由树是前缀树（Trie），支持高效的路径匹配。
+// 路由树的每个节点代表一个路径段，节点类型分为静态节点、参数节点和通配符节点。
 func (n *node) addRoute(path string, handlers HandlersChain) {
+	// 获取完整路径
 	fullPath := path
 	n.priority++
 
-	// Empty tree
+	// Empty tree 空树，直接插入
 	if len(n.path) == 0 && len(n.children) == 0 {
 		n.insertChild(path, fullPath, handlers)
 		n.nType = root
 		return
 	}
 
+	// 父节点完整路径索引
 	parentFullPathIndex := 0
 
+	// 否则，遍历路由树，找到合适的位置插入
 walk:
 	for {
 		// Find the longest common prefix.
 		// This also implies that the common prefix contains no ':' or '*'
 		// since the existing key can't contain those chars.
+		// 找到最长公共前缀
 		i := longestCommonPrefix(path, n.path)
 
+		// 如果最长公共前缀小于当前节点的路径长度，则需要分割边
 		// Split edge
 		if i < len(n.path) {
+			// 创建新节点
 			child := node{
 				path:      n.path[i:],
 				wildChild: n.wildChild,
@@ -175,21 +183,28 @@ walk:
 				fullPath:  n.fullPath,
 			}
 
+			// 更新当前节点的子节点
 			n.children = []*node{&child}
 			// []byte for proper unicode char conversion, see #65
+			// 更新当前节点的索引
 			n.indices = bytesconv.BytesToString([]byte{n.path[i]})
 			n.path = path[:i]
+			// 更新当前节点的处理函数
 			n.handlers = nil
+			// 更新当前节点的通配符标志
 			n.wildChild = false
+			// 更新当前节点的完整路径
 			n.fullPath = fullPath[:parentFullPathIndex+i]
 		}
 
 		// Make new node a child of this node
+		// 如果当前节点的路径长度小于新路径的长度，则需要插入新节点
 		if i < len(path) {
 			path = path[i:]
 			c := path[0]
 
 			// '/' after param
+			// 如果当前节点是参数节点，并且新路径的第一个字符是 '/'，并且当前节点只有一个子节点，则需要插入新节点
 			if n.nType == param && c == '/' && len(n.children) == 1 {
 				parentFullPathIndex += len(n.path)
 				n = n.children[0]
@@ -198,6 +213,7 @@ walk:
 			}
 
 			// Check if a child with the next path byte exists
+			// 检查是否存在与下一个路径字节匹配的子节点
 			for i, max_ := 0, len(n.indices); i < max_; i++ {
 				if c == n.indices[i] {
 					parentFullPathIndex += len(n.path)
@@ -208,21 +224,30 @@ walk:
 			}
 
 			// Otherwise insert it
+			// 如果当前节点不是参数节点和通配符节点，则需要插入新节点
 			if c != ':' && c != '*' && n.nType != catchAll {
 				// []byte for proper unicode char conversion, see #65
 				n.indices += bytesconv.BytesToString([]byte{c})
+				// 创建新节点
 				child := &node{
 					fullPath: fullPath,
 				}
+				// 添加新节点到当前节点
 				n.addChild(child)
+				// 更新当前节点的优先级
 				n.incrementChildPrio(len(n.indices) - 1)
+				// 更新当前节点
 				n = child
 			} else if n.wildChild {
 				// inserting a wildcard node, need to check if it conflicts with the existing wildcard
+				// 更新当前节点
 				n = n.children[len(n.children)-1]
+				// 更新当前节点的优先级
 				n.priority++
 
+				// 检查通配符是否与现有通配符冲突
 				// Check if the wildcard matches
+				// 如果新路径长度大于等于当前节点路径长度，并且当前节点路径等于新路径的前缀，并且当前节点不是通配符节点，并且新路径长度大于等于当前节点路径长度，或者新路径的下一个字符是 '/'，则需要继续遍历
 				if len(path) >= len(n.path) && n.path == path[:len(n.path)] &&
 					// Adding a child to a catchAll is not possible
 					n.nType != catchAll &&
@@ -232,10 +257,12 @@ walk:
 				}
 
 				// Wildcard conflict
+				// 通配符冲突
 				pathSeg := path
 				if n.nType != catchAll {
 					pathSeg, _, _ = strings.Cut(pathSeg, "/")
 				}
+				// 获取前缀
 				prefix := fullPath[:strings.Index(fullPath, pathSeg)] + n.path
 				panic("'" + pathSeg +
 					"' in new path '" + fullPath +
@@ -244,15 +271,19 @@ walk:
 					"'")
 			}
 
+			// 插入新节点
 			n.insertChild(path, fullPath, handlers)
 			return
 		}
 
 		// Otherwise add handle to current node
+		// 如果当前节点有处理函数，则抛出错误
 		if n.handlers != nil {
 			panic("handlers are already registered for path '" + fullPath + "'")
 		}
+		// 更新当前节点的处理函数
 		n.handlers = handlers
+		// 更新当前节点的完整路径
 		n.fullPath = fullPath
 		return
 	}

@@ -357,25 +357,33 @@ func (engine *Engine) rebuild405Handlers() {
 	engine.allNoMethod = engine.combineHandlers(engine.noMethod)
 }
 
+// 添加路由，获取 HTTP 方法的路由器跟节点 node
 func (engine *Engine) addRoute(method, path string, handlers HandlersChain) {
+	// 相关提示和要求，先断言参数合法性。
 	assert1(path[0] == '/', "path must begin with '/'")
 	assert1(method != "", "HTTP method can not be empty")
 	assert1(len(handlers) > 0, "there must be at least one handler")
 
+	// 打印路由信息
 	debugPrintRoute(method, path, handlers)
 
+	// 获取 HTTP 方法的路由器跟节点 node
 	root := engine.trees.get(method)
+	// 如果根节点不存在，则创建一个根节点
 	if root == nil {
 		root = new(node)
 		root.fullPath = "/"
 		engine.trees = append(engine.trees, methodTree{method: method, root: root})
 	}
+	// 将路由注册到路由树中
 	root.addRoute(path, handlers)
 
+	// 更新最大参数数量
 	if paramsCount := countParams(path); paramsCount > engine.maxParams {
 		engine.maxParams = paramsCount
 	}
 
+	// 更新最大路径段数量
 	if sectionsCount := countSections(path); sectionsCount > engine.maxSections {
 		engine.maxSections = sectionsCount
 	}
