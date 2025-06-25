@@ -33,6 +33,7 @@ type IRouter interface {
 // IRoutes defines all router handle interface.
 // 分组嵌套路由器接口，包含单路由器和分组路由器。
 type IRoutes interface {
+	// 添加全局中间件，会应用到所有路由上。
 	Use(...HandlerFunc) IRoutes
 
 	Handle(string, string, ...HandlerFunc) IRoutes
@@ -247,6 +248,7 @@ func (group *RouterGroup) createStaticHandler(relativePath string, fs http.FileS
 	}
 }
 
+// 合并处理函数链
 func (group *RouterGroup) combineHandlers(handlers HandlersChain) HandlersChain {
 	finalSize := len(group.Handlers) + len(handlers)
 	assert1(finalSize < int(abortIndex), "too many handlers")
