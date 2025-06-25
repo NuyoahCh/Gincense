@@ -55,6 +55,7 @@ const abortIndex int8 = math.MaxInt8 >> 1
 
 // Context is the most important part of gin. It allows us to pass variables between middleware,
 // manage the flow, validate the JSON of a request and render a JSON response for example.
+// Context 是 Gin 的核心，它允许我们在中间件之间传递变量，管理流程，验证请求的 JSON 并渲染 JSON 响应等。
 type Context struct {
 	writermem responseWriter
 	Request   *http.Request
@@ -97,6 +98,7 @@ type Context struct {
 /********** CONTEXT CREATION ********/
 /************************************/
 
+// 重置 Context 对象
 func (c *Context) reset() {
 	c.Writer = &c.writermem
 	c.Params = c.Params[:0]
@@ -116,6 +118,7 @@ func (c *Context) reset() {
 
 // Copy returns a copy of the current context that can be safely used outside the request's scope.
 // This has to be used when the context has to be passed to a goroutine.
+// 复制 Context 对象，用于在 goroutine 中使用。
 func (c *Context) Copy() *Context {
 	cp := Context{
 		writermem: c.writermem,

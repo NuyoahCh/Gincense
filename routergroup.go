@@ -117,6 +117,7 @@ func (group *RouterGroup) Handle(httpMethod, relativePath string, handlers ...Ha
 }
 
 // POST is a shortcut for router.Handle("POST", path, handlers).
+// 本质上是 router.Handle("POST", path, handlers) 的封装
 func (group *RouterGroup) POST(relativePath string, handlers ...HandlerFunc) IRoutes {
 	return group.handle(http.MethodPost, relativePath, handlers)
 }
